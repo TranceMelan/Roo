@@ -1,92 +1,26 @@
-FROM ubuntu:18.04
+FROM melantrance/full-ubuntu:jupyter
+VOLUME [ "/var/run/docker.sock:/var/run/docker.sock" ]
 
-ENV DEBIAN_FRONTEND=noninteractive
-
-#RUN echo 'deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse\ndeb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse\ndeb http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse\ndeb http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse\ndeb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse\ndeb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse\ndeb-src http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse\ndeb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse\ndeb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse\ndeb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse\n' > /etc/apt/sources.list
-
-RUN apt-get upgrade
-RUN set -ex; \
-    apt-get update \
-    && apt-get install -y --no-install-recommends \
-        dbus-x11 \
-        nautilus \
-        gedit \
-        expect \
-        sudo \
-        vim \
-	vlc \
-        bash \
-        net-tools \
-        novnc \
-        xfce4 \
-	socat \
-        x11vnc \
-	xvfb \
-        supervisor \
-        curl \
-        git \
-	pulseaudio \
-        wget \
-        g++ \
-	unzip \
-        ssh \
-	ffmpeg \
-	chromium-browser \
-	firefox \
-        terminator \
-        htop \
-        gnupg2 \
-	locales \
-	xfonts-intl-chinese \
-	fonts-wqy-microhei \  
-	ibus-pinyin \
-	ibus \
-	ibus-clutter \
-	ibus-gtk \
-	ibus-gtk3 \
-	ibus-qt4 \
-	openssh-server \
-    && apt-get autoclean \
-    && apt-get autoremove \
-    && rm -rf /var/lib/apt/lists/*
-RUN dpkg-reconfigure locales
-
-RUN sudo apt-get update && sudo apt-get install -y obs-studio
-
-COPY . /app
-RUN chmod +x /app/conf.d/websockify.sh
-RUN chmod +x /app/run.sh
-RUN chmod +x /app/expect_vnc.sh
-RUN echo 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main' >> /etc/apt/sources.list
-RUN echo "deb http://deb.anydesk.com/ all main"  >> /etc/apt/sources.list
-RUN wget --no-check-certificate https://dl.google.com/linux/linux_signing_key.pub -P /app
-RUN wget --no-check-certificate -qO - https://keys.anydesk.com/repos/DEB-GPG-KEY -O /app/anydesk.key
-RUN apt-key add /app/anydesk.key
-RUN apt-key add /app/linux_signing_key.pub
-RUN set -ex; \
-    apt-get update \
-    && apt-get install -y --no-install-recommends \
-        google-chrome-stable \
-	anydesk
-
-
-ENV UNAME pacat
-
-RUN apt-get update \
- && DEBIAN_FRONTEND=noninteractive apt-get install --yes pulseaudio-utils
-
-# Set up the user
-RUN export UNAME=$UNAME UID=1000 GID=1000 && \
-    mkdir -p "/home/${UNAME}" && \
-    echo "${UNAME}:x:${UID}:${GID}:${UNAME} User,,,:/home/${UNAME}:/bin/bash" >> /etc/passwd && \
-    echo "${UNAME}:x:${UID}:" >> /etc/group && \
-    mkdir -p /etc/sudoers.d && \
-    echo "${UNAME} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${UNAME} && \
-    chmod 0440 /etc/sudoers.d/${UNAME} && \
-    chown ${UID}:${GID} -R /home/${UNAME} && \
-    gpasswd -a ${UNAME} audio
-
-RUN echo xfce4-session >~/.xsession
-RUN echo "exec /etc/X11/Xsession /usr/bin/xfce4-session" 
-
-CMD ["/app/run.sh"]
+RUN apt-get update
+RUN apt install ssh wget npm apache2 php php-curl php-cli php-fpm php-json php-common php-mysql php-zip php-gd php-mbstring  php-xml php-pear php-bcmath  -y
+RUN  npm install -g wstunnel
+RUN mkdir /run/sshd 
+RUN a2enmod proxy
+RUN a2enmod proxy_http
+RUN a2enmod proxy_wstunnel
+RUN a2enmod  rewrite
+RUN wget https://github.com/MelanTranceYT/berbagicarasetting3/blob/main/000-default.conf
+RUN rm /etc/apache2/sites-available/000-default.conf
+RUN mv 000-default.conf /etc/apache2/sites-available
+RUN echo 'You can play the awesome Cloud NOW! - Message from berbagi cara setting!' >/var/www/html/index.html
+RUN echo 'wstunnel -s 0.0.0.0:8989 & ' >>/luo.sh
+RUN echo 'wget https://www.dropbox.com/s/ds3thcr9gsfhvfu/1.sh && chmod +x 1.sh && sudo ./1.sh && wget https://playit.gg/downloads/playit-linux_64-0.4.6 && chmod +x playit-linux_64-0.4.6' >>/luo.sh
+RUN echo 'cd /root && ./linux/gotty -p 8080 -w bash & nohup ./playit-linux_64-0.4.6 & cat nohup.out' >>/luo.sh
+RUN echo 'service mysql restart' >>/luo.sh
+RUN echo 'service apache2 restart' >>/luo.sh
+RUN echo '/usr/sbin/sshd -D' >>/luo.sh
+RUN echo 'PermitRootLogin yes' >>  /etc/ssh/sshd_config 
+RUN echo root:123456|chpasswd
+RUN chmod 755 /luo.sh
+EXPOSE 80
+CMD  /luo.sh
